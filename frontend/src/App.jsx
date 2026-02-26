@@ -9,18 +9,17 @@ function App() {
 
   const GOAL = 100;
 
-  // Added 'color' to each character
   const characters = [
-    { id: 'jon', name: 'Jon', icon: '❄️', color: '#87CEEB' },      // Stark Ice Blue
-    { id: 'dany', name: 'Dany', icon: '🔥', color: '#c94204' },     // Targaryen Red
-    { id: 'tyrion', name: 'Tyrion', icon: '🍷', color: '#68052b' }, // Lannister Crimson
-    { id: 'tywin', name: 'Tywin', icon: '🦁', color: '#9e8809' },   // Lannister Gold
-    { id: 'arya', name: 'Arya', icon: '🗡️', color: '#708090' },    // Stark Grey
-    { id: 'sansa', name: 'Sansa', icon: '👑', color: '#504466' },   // Purple
-    { id: 'bran', name: 'Bran', icon: '👁️', color: '#0d530d' },    // Weirwood Green
-    { id: 'stannis', name: 'Stannis', icon: '🦌', color: '#ff8c0086' }, // Baratheon Orange/Fire
-    { id: 'robert', name: 'Robert', icon: '🍺', color: '#f0ae08' },  // Baratheon Gold
-    { id: 'ramsay', name: 'Ramsay', icon: '🌭', color: '#8b0000' },  // Bolton Blood Red
+    { id: 'jon', name: 'Jon', icon: '❄️', color: '#87cfebb6' },
+    { id: 'dany', name: 'Dany', icon: '🔥', color: '#c94204ad' },
+    { id: 'tyrion', name: 'Tyrion', icon: '🍷', color: '#68052b' },
+    { id: 'tywin', name: 'Tywin', icon: '🦁', color: '#9e8809b7' },
+    { id: 'arya', name: 'Arya', icon: '🗡️', color: '#708090c5' },
+    { id: 'sansa', name: 'Sansa', icon: '👑', color: '#504466bb' },
+    { id: 'bran', name: 'Bran', icon: '👁️', color: '#0d530db0' },
+    { id: 'stannis', name: 'Stannis', icon: '🦌', color: '#ff8c00b6' },
+    { id: 'robert', name: 'Robert', icon: '🍺', color: '#f0ae08b4' },
+    { id: 'ramsay', name: 'Ramsay', icon: '🌭', color: '#8b0000ab' },
   ];
 
   const handleVote = (id) => {
@@ -60,13 +59,11 @@ function App() {
 
               return (
                 <g key={`path-${char.id}`}>
-                  {/* Future Path: Faint solid house-colored line */}
                   <line 
                     x1={xPos} y1={yPos} x2="0" y2="0" 
                     className="path-faded" 
                     style={{ stroke: char.color, opacity: 0.15 }} 
                   />
-                  {/* Traveled Path: Bright solid house-colored line */}
                   <line 
                     x1={xEdge} y1={yEdge} x2={xPos} y2={yPos} 
                     className="path-traveled" 
@@ -94,11 +91,18 @@ function App() {
                 className="circle-token"
                 style={{ 
                   transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
-                  color: char.color 
                 }}
               >
                 <span className="char-emoji">{char.icon}</span>
-                <div className="char-label" style={{ borderColor: char.color }}>{char.name}</div>
+                <div 
+                    className="char-label" 
+                    style={{ 
+                        borderColor: char.color,
+                        boxShadow: `0 0 15px ${char.color}` // This makes the name "bright"
+                    }}
+                >
+                    {char.name}
+                </div>
               </div>
             );
           })}
