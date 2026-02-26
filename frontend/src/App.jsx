@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import './App.css'
+// Make sure you saved the throne image in your src/assets folder!
+import throneImg from './assets/throne.png' 
 
 function App() {
   const [votes, setVotes] = useState({
@@ -40,7 +42,7 @@ function App() {
 
       <aside className="sidebar left-side">
         <h1 className="title">Race for the <br/><span>Iron Throne</span></h1>
-        <p className="description">Solid lines represent the path of destiny for each Great House.</p>
+        <p className="description">Solid lines represent the path of destiny.</p>
       </aside>
 
       <main className="arena-container">
@@ -74,9 +76,10 @@ function App() {
             })}
           </svg>
 
+          {/* THE NEW THRONE IMAGE */}
           <div className="throne-center">
             <div className="throne-glow"></div>
-            <span className="throne-icon">🪑</span>
+            <img src={throneImg} alt="Iron Throne" className="throne-image" />
           </div>
 
           {characters.map((char, index) => {
@@ -89,19 +92,17 @@ function App() {
               <div 
                 key={char.id} 
                 className="circle-token"
-                style={{ 
-                  transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
-                }}
+                style={{ transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))` }}
               >
                 <span className="char-emoji">{char.icon}</span>
                 <div 
-                    className="char-label" 
-                    style={{ 
-                        borderColor: char.color,
-                        boxShadow: `0 0 15px ${char.color}` // This makes the name "bright"
-                    }}
+                  className="char-label" 
+                  style={{ 
+                    borderColor: char.color,
+                    boxShadow: `0 0 10px ${char.color}` // Bright glow on names
+                  }}
                 >
-                    {char.name}
+                  {char.name}
                 </div>
               </div>
             );
