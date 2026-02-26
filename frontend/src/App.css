@@ -1,0 +1,149 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Spectral:wght@400;700&display=swap');
+
+:root { --gold: #d4af37; --bg: #050505; }
+
+body, html {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: #fff;
+  font-family: 'Spectral', serif;
+  overflow: hidden;
+}
+
+/* THE THREE-COLUMN GRID */
+.war-room {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
+
+.sidebar {
+  width: 300px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 40px;
+  box-sizing: border-box;
+  z-index: 10;
+  background: rgba(10, 10, 10, 0.8);
+  border-right: 1px solid rgba(212, 175, 55, 0.1);
+}
+
+.right-side {
+  border-right: none;
+  border-left: 1px solid rgba(212, 175, 55, 0.1);
+}
+
+/* LEFT SIDEBAR */
+.title {
+  font-family: 'Cinzel', serif;
+  color: var(--gold);
+  font-size: 2.2rem;
+  line-height: 1;
+  margin-bottom: 20px;
+}
+.title span { font-size: 1.5rem; color: #fff; }
+.description { color: #888; font-style: italic; }
+
+/* CENTER ARENA */
+.arena-container {
+  flex: 1; /* Takes up all remaining space */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.arena-anchor { position: relative; width: 0; height: 0; }
+
+.throne-center {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+}
+.throne-icon { font-size: 100px; filter: drop-shadow(0 0 30px var(--gold)); }
+
+.circle-token {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.char-emoji { font-size: 45px; }
+.char-label {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  padding: 2px 6px;
+  background: #000;
+}
+
+/* RIGHT SIDEBAR CONTROLS */
+.sidebar-heading {
+  font-family: 'Cinzel', serif;
+  color: var(--gold);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.controls-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.vote-btn {
+  display: flex;
+  align-items: center;
+  background: #111;
+  border: 1px solid #333;
+  color: #fff;
+  padding: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+  font-family: 'Spectral', serif;
+}
+
+.vote-btn:hover { border-color: var(--gold); background: #1a1a1a; }
+.btn-icon { font-size: 20px; margin-right: 15px; }
+.btn-name { flex: 1; text-align: left; font-weight: bold; }
+.btn-count { color: var(--gold); font-family: monospace; }
+
+.texture-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-image: url('https://www.transparenttextures.com/patterns/dark-matter.png');
+  opacity: 0.1;
+  pointer-events: none;
+}
+.floating-reset {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #111;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+.floating-reset:hover {
+  background: var(--gold);
+  color: #000;
+  transform: rotate(-180deg) scale(1.1);
+  box-shadow: 0 0 20px var(--gold);
+}
