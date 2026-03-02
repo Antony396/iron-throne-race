@@ -4,6 +4,16 @@ import throneImg from './assets/throne.png'
 
 const API_BASE_URL = "https://iron-throne-race.onrender.com/api";
 
+// HELPER: Creates a unique ID for this specific browser/device
+const getVoterId = () => {
+  let id = localStorage.getItem('throne_voter_id');
+  if (!id) {
+    id = crypto.randomUUID(); 
+    localStorage.setItem('throne_voter_id', id);
+  }
+  return id;
+};
+
 function App() {
   const [votes, setVotes] = useState({
     jon: 0, dany: 0, tywin: 0, tyrion: 0, bran: 0, 
@@ -28,34 +38,44 @@ function App() {
 
   useEffect(() => {
     const init = async () => {
+      const voterId = getVoterId();
       try {
         const resVotes = await fetch(`${API_BASE_URL}/votes`);
         if (resVotes.ok) setVotes(await resVotes.json());
 
-        const resStatus = await fetch(`${API_BASE_URL}/voter-status`);
+        // Pass voterId to get the count for THIS device
+        const resStatus = await fetch(`${API_BASE_URL}/voter-status?voterId=${voterId}`);
         if (resStatus.ok) {
           const status = await resStatus.json();
           setUserVotesUsed(status.votes_used);
         }
-      } catch (e) { console.error("Error fetching from the Citadel:", e); }
+      } catch (e) { console.error("Error fetching:", e); }
     };
     init();
   }, []);
 
   const handleVote = async (id) => {
-    if (userVotesUsed >= 3) return;
+    if (userVotesUsed >= 3) return; // Silent lock
+
+    const voterId = getVoterId();
 
     try {
       const response = await fetch(`${API_BASE_URL}/vote`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ characterId: id })
+        body: JSON.stringify({ 
+          characterId: id,
+          voterId: voterId 
+        })
       });
 
       if (response.ok) {
         const data = await response.json();
         setVotes(prev => ({ ...prev, [id]: data.new_count }));
         setUserVotesUsed(data.votes_used);
+      } else {
+        const err = await response.json();
+        alert(err.error);
       }
     } catch (error) {
       console.error("The raven fell:", error);
@@ -78,7 +98,6 @@ function App() {
         <h1 className="title">Race for the <br/><span>Iron Throne</span></h1>
         <p className="description">Solid lines represent the path of destiny.</p>
         
-        {/* NEW: PERSONAL INFLUENCE PANEL */}
         <div style={{ marginTop: 'auto', paddingBottom: '20px', borderTop: '1px solid rgba(212, 175, 55, 0.2)', paddingTop: '30px' }}>
           <h3 style={{ fontFamily: 'Cinzel', color: '#d4af37', fontSize: '1rem', letterSpacing: '2px' }}>Your Influence</h3>
           <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '10px 0', fontFamily: 'Cinzel' }}>
@@ -146,10 +165,10 @@ function App() {
               key={char.id} 
               className="vote-btn" 
               onClick={() => handleVote(char.id)}
-              disabled={userVotesUsed >= 3} // Disable when limit reached
+              disabled={userVotesUsed >= 3} 
               style={{ 
                 borderLeft: `4px solid ${char.color}`,
-                opacity: userVotesUsed >= 3 ? 0.3 : 1, // Fade buttons when locked
+                opacity: userVotesUsed >= 3 ? 0.3 : 1, 
                 cursor: userVotesUsed >= 3 ? 'default' : 'pointer'
               }}
             >

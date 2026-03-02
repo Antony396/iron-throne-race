@@ -4,12 +4,10 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 
 app = Flask(__name__)
-
-# This allows your Vercel URL to talk to this API
 CORS(app, resources={r"/api/*": {"origins": "*"}}) 
 
 # Database configuration
-database_url = os.environ.get('DATABASE_URL', 'sqlite:///throne_votes.db')
+database_url = os.environ.get('DATABASE_URL', 'sqlite:///throne_votes_v2.db') # Renamed to force a fresh DB
 if database_url and database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 
@@ -20,8 +18,8 @@ db = SQLAlchemy(app)
 # --- MODELS ---
 class VoteRecord(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    ip_address = db.Column(db.String(100), unique=True, nullable=False)
-    votes_cast = db.Column(db.Integer, default=0) # New field to track count
+    voter_uuid = db.Column(db.String(100), unique=True, nullable=False) # Switched to UUID
+    votes_cast = db.Column(db.Integer, default=0)
 
 class CharacterVote(db.Model):
     id = db.Column(db.String(50), primary_key=True)
@@ -29,39 +27,45 @@ class CharacterVote(db.Model):
 
 # --- ROUTES ---
 
-# NEW: This sends the current scores to your React app on page load
 @app.route('/api/votes', methods=['GET'])
 def get_votes():
     votes = CharacterVote.query.all()
-    # Converts database rows into a simple object: { "jon": 5, "dany": 10... }
     return jsonify({v.id: v.count for v in votes})
 
 @app.route('/api/voter-status', methods=['GET'])
 def get_voter_status():
-    user_ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0]
-    voter = VoteRecord.query.filter_by(ip_address=user_ip).first()
+    # Gets voterId from the React frontend URL (?voterId=...)
+    voter_uuid = request.args.get('voterId') 
+    if not voter_uuid:
+        return jsonify({"votes_used": 0})
+    
+    voter = VoteRecord.query.filter_by(voter_uuid=voter_uuid).first()
     return jsonify({"votes_used": voter.votes_cast if voter else 0})
+
 @app.route('/api/vote', methods=['POST'])
 def cast_vote():
     data = request.json
     char_id = data.get('characterId')
-    user_ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0]
+    voter_uuid = data.get('voterId') # Use the UUID sent from React
 
-    # Find or create the voter record
-    voter = VoteRecord.query.filter_by(ip_address=user_ip).first()
+    if not voter_uuid:
+        return jsonify({"error": "No voter ID provided"}), 400
+
+    # Find or create the voter record based on UUID
+    voter = VoteRecord.query.filter_by(voter_uuid=voter_uuid).first()
     
     if not voter:
-        voter = VoteRecord(ip_address=user_ip, votes_cast=0)
+        voter = VoteRecord(voter_uuid=voter_uuid, votes_cast=0)
         db.session.add(voter)
+        db.session.flush() # Stage changes to check limits
 
-    # Check if they have reached the 3-vote limit
     if voter.votes_cast >= 3:
-        return jsonify({"error": "Limit reached", "remaining": 0}), 403
+        return jsonify({"error": "You have exhausted your influence!", "remaining": 0}), 403
 
     character = CharacterVote.query.get(char_id)
     if character:
         character.count += 1
-        voter.votes_cast += 1 # Increment their personal usage
+        voter.votes_cast += 1 
         db.session.commit()
         return jsonify({
             "success": True, 
@@ -70,11 +74,10 @@ def cast_vote():
         })
     
     return jsonify({"error": "Character not found"}), 404
+
 # --- DATABASE INITIALIZATION ---
-# This runs once when the app starts up
 with app.app_context():
     db.create_all()
-    # If the table is empty, add the characters so the counts start at 0
     if not CharacterVote.query.first():
         characters = ['jon', 'dany', 'tywin', 'tyrion', 'bran', 'robert', 'stannis', 'arya', 'sansa', 'ramsay']
         for char_id in characters:
@@ -82,6 +85,4 @@ with app.app_context():
         db.session.commit()
 
 if __name__ == '__main__':
-    # Local development port
     app.run(debug=True, port=5000)
-
