@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react' // Added useEffect to the import
 import './App.css'
-// Make sure you saved the throne image in your src/assets folder!
 import throneImg from './assets/throne.png' 
+
+// Make sure this matches your Render URL exactly (check if you need /api at the end)
+const API_BASE_URL = "https://iron-throne-race.onrender.com/api";
 
 function App() {
   const [votes, setVotes] = useState({
@@ -24,12 +26,47 @@ function App() {
     { id: 'ramsay', name: 'Ramsay', icon: '🌭', color: '#8b0000ab' },
   ];
 
-  const handleVote = (id) => {
-    if (votes[id] < GOAL) setVotes(prev => ({ ...prev, [id]: prev[id] + 1 }));
+  // 1. FETCH VOTES ON LOAD
+  useEffect(() => {
+    const fetchVotes = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/votes`);
+        if (response.ok) {
+          const data = await response.json();
+          setVotes(data);
+        }
+      } catch (error) {
+        console.error("The Citadel is unreachable:", error);
+      }
+    };
+    fetchVotes();
+  }, []);
+
+  // 2. HANDLE VOTING
+  const handleVote = async (id) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/vote`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ characterId: id })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setVotes(prev => ({ ...prev, [id]: data.new_count }));
+        alert("Your claim has been recorded in the Great Ledger!");
+      } else {
+        alert(data.error);
+      }
+    } catch (error) {
+      alert("The ravens are lost. Is the backend server awake?");
+    }
   };
 
   const handleReset = () => {
     if (window.confirm("My Lord, shall we restart the war?")) {
+      // Note: You might want a backend route for this eventually to clear the DB!
       const resetVotes = {};
       characters.forEach(c => resetVotes[c.id] = 0);
       setVotes(resetVotes);
@@ -76,7 +113,6 @@ function App() {
             })}
           </svg>
 
-          {/* THE NEW THRONE IMAGE */}
           <div className="throne-center">
             <div className="throne-glow"></div>
             <img src={throneImg} alt="Iron Throne" className="throne-image" />
@@ -84,7 +120,7 @@ function App() {
 
           {characters.map((char, index) => {
             const angle = (index / characters.length) * 2 * Math.PI;
-            const currentR = 280 * (1 - votes[char.id] / GOAL);
+            const currentR = 280 * (1 - (votes[char.id] || 0) / GOAL);
             const x = Math.cos(angle) * currentR;
             const y = Math.sin(angle) * currentR;
 
@@ -99,7 +135,7 @@ function App() {
                   className="char-label" 
                   style={{ 
                     borderColor: char.color,
-                    boxShadow: `0 0 10px ${char.color}` // Bright glow on names
+                    boxShadow: `0 0 10px ${char.color}`
                   }}
                 >
                   {char.name}
@@ -122,7 +158,7 @@ function App() {
             >
               <span className="btn-icon">{char.icon}</span>
               <span className="btn-name">{char.name}</span>
-              <span className="btn-count" style={{ color: char.color }}>{votes[char.id]}</span>
+              <span className="btn-count" style={{ color: char.color }}>{votes[char.id] || 0}</span>
             </button>
           ))}
         </div>
