@@ -77,24 +77,47 @@ function App() {
     <div className="war-room">
       <div className="texture-overlay"></div>
 
-      <aside className="sidebar left-side">
-        <h1 className="title">Race for the <br/><span>Iron Throne</span></h1>
-        <p className="description">Solid lines represent the path of destiny.</p>
-        
-        <div className="influence-panel">
-          <h3 className="influence-title">Your Influence</h3>
-          <div className="influence-number">{userVotesUsed} <span>/ 3</span></div>
-          <p className="influence-hint">
-            {userVotesUsed >= 3 ? "Your claim is sealed in blood." : "Points of influence remaining."}
-          </p>
+      {isMobile ? (
+        /* --- MOBILE UI --- */
+        <div className="mobile-wrapper">
+          <header className="mobile-header">
+            <h1 className="cinzel-text">THE IRON <span>THRONE</span></h1>
+            <div className="influence-pill">Influence: {userVotesUsed}/3</div>
+          </header>
+          <main className="mobile-track-list">
+            {characters.map((char) => {
+              const progress = Math.min(((votes[char.id] || 0) / GOAL) * 100, 100);
+              return (
+                <div key={char.id} className="mobile-character-row">
+                  <button className="m-vote-btn" onClick={() => handleVote(char.id)} disabled={userVotesUsed >= 3} style={{ borderLeft: `3px solid ${char.color}` }}>
+                    <span className="m-emoji">{char.icon}</span>
+                  </button>
+                  <div className="m-slider-container">
+                    <div className="m-label-row">
+                      <span className="m-char-name">{char.name}</span>
+                      <span className="m-vote-num" style={{ color: char.color }}>{votes[char.id] || 0}</span>
+                    </div>
+                    <div className="m-track"><div className="m-fill" style={{ width: `${progress}%`, backgroundColor: char.color }}></div></div>
+                  </div>
+                </div>
+              );
+            })}
+          </main>
         </div>
-      </aside>
+      ) : (
+        /* --- DESKTOP UI --- */
+        <div className="desktop-wrapper">
+          <aside className="sidebar left-side">
+            <h1 className="title">Race for the <br/><span>Iron Throne</span></h1>
+            <div className="influence-panel">
+              <h3 className="influence-title">Your Influence</h3>
+              <div className="influence-number">{userVotesUsed} <span>/ 3</span></div>
+              <p className="influence-hint">{userVotesUsed >= 3 ? "Your claim is sealed in blood." : "Points remaining."}</p>
+            </div>
+          </aside>
 
-      <main className="arena-container">
-        <div className="arena-anchor">
-          {/* Circular Arena & Throne (Hidden on Mobile) */}
-          {!isMobile && (
-            <>
+          <main className="arena-container">
+            <div className="arena-anchor">
               <svg className="arena-svg" viewBox="-350 -350 700 700">
                 {characters.map((char, index) => {
                   const angle = (index / characters.length) * 2 * Math.PI;
@@ -116,49 +139,35 @@ function App() {
                 <div className="throne-glow"></div>
                 <img src={throneImg} alt="Throne" className="throne-image" />
               </div>
-            </>
-          )}
+              {characters.map((char, index) => {
+                const angle = (index / characters.length) * 2 * Math.PI;
+                const currentR = 280 * (1 - (votes[char.id] || 0) / GOAL);
+                const x = Math.cos(angle) * currentR;
+                const y = Math.sin(angle) * currentR;
+                return (
+                  <div key={char.id} className="circle-token" style={{ transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))` }}>
+                    <span className="char-emoji">{char.icon}</span>
+                    <div className="char-label" style={{ borderColor: char.color }}>{char.name}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </main>
 
-          {/* CHARACTER TOKENS */}
-          {characters.map((char, index) => {
-            if (isMobile) {
-              // Sliding Race Logic for Mobile
-              const progress = Math.min(((votes[char.id] || 0) / GOAL) * 85, 85);
-              return (
-                <div key={char.id} className="mobile-race-row" style={{ left: `${progress}%` }}>
-                  <span className="char-emoji">{char.icon}</span>
-                  <div className="char-label" style={{ borderColor: char.color }}>{char.name}</div>
-                </div>
-              );
-            } else {
-              // Circular Token Logic for PC
-              const angle = (index / characters.length) * 2 * Math.PI;
-              const currentR = 280 * (1 - (votes[char.id] || 0) / GOAL);
-              const x = Math.cos(angle) * currentR;
-              const y = Math.sin(angle) * currentR;
-              return (
-                <div key={char.id} className="circle-token" style={{ transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))` }}>
-                  <span className="char-emoji">{char.icon}</span>
-                  <div className="char-label" style={{ borderColor: char.color }}>{char.name}</div>
-                </div>
-              );
-            }
-          })}
+          <aside className="sidebar right-side">
+            <h3 className="sidebar-heading">Cast Your Vote</h3>
+            <div className="controls-stack">
+              {characters.map((char) => (
+                <button key={char.id} className="vote-btn" onClick={() => handleVote(char.id)} disabled={userVotesUsed >= 3} style={{ borderLeft: `4px solid ${char.color}` }}>
+                  <span className="btn-icon">{char.icon}</span>
+                  <span className="btn-name">{char.name}</span>
+                  <span className="btn-count" style={{ color: char.color }}>{votes[char.id] || 0}</span>
+                </button>
+              ))}
+            </div>
+          </aside>
         </div>
-      </main>
-
-      <aside className="sidebar right-side">
-        <h3 className="sidebar-heading">Cast Your Vote</h3>
-        <div className="controls-stack">
-          {characters.map((char) => (
-            <button key={char.id} className="vote-btn" onClick={() => handleVote(char.id)} disabled={userVotesUsed >= 3} style={{ borderLeft: `4px solid ${char.color}` }}>
-              <span className="btn-icon">{char.icon}</span>
-              <span className="btn-name">{char.name}</span>
-              <span className="btn-count" style={{ color: char.color }}>{votes[char.id] || 0}</span>
-            </button>
-          ))}
-        </div>
-      </aside>
+      )}
     </div>
   );
 }

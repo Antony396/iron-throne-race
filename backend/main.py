@@ -66,7 +66,7 @@ def cast_vote():
         db.session.add(voter)
         db.session.flush()
 
-    if voter.votes_cast >= 3:
+    if voter.votes_cast >= 300:
         return jsonify({"error": "Influence exhausted!", "remaining": 0}), 403
 
     character = CharacterVote.query.get(char_id)
