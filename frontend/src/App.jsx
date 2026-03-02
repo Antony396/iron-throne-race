@@ -43,7 +43,6 @@ function App() {
         const resVotes = await fetch(`${API_BASE_URL}/votes`);
         if (resVotes.ok) setVotes(await resVotes.json());
 
-        // Pass voterId to get the count for THIS device
         const resStatus = await fetch(`${API_BASE_URL}/voter-status?voterId=${voterId}`);
         if (resStatus.ok) {
           const status = await resStatus.json();
@@ -55,7 +54,7 @@ function App() {
   }, []);
 
   const handleVote = async (id) => {
-    if (userVotesUsed >= 3) return; // Silent lock
+    if (userVotesUsed >= 3) return; 
 
     const voterId = getVoterId();
 
@@ -82,8 +81,6 @@ function App() {
     }
   };
 
- 
-
   return (
     <div className="war-room">
       <div className="texture-overlay"></div>
@@ -92,12 +89,13 @@ function App() {
         <h1 className="title">Race for the <br/><span>Iron Throne</span></h1>
         <p className="description">Solid lines represent the path of destiny.</p>
         
-        <div style={{ marginTop: 'auto', paddingBottom: '20px', borderTop: '1px solid rgba(212, 175, 55, 0.2)', paddingTop: '30px' }}>
-          <h3 style={{ fontFamily: 'Cinzel', color: '#d4af37', fontSize: '1rem', letterSpacing: '2px' }}>Your Influence</h3>
-          <div style={{ fontSize: '2.5rem', fontWeight: '800', margin: '10px 0', fontFamily: 'Cinzel' }}>
-            {userVotesUsed} <span style={{ fontSize: '1rem', color: '#444' }}>/ 3</span>
+        {/* UPDATED: Using the new CSS classes for the influence panel */}
+        <div className="influence-panel">
+          <h3 className="influence-title">Your Influence</h3>
+          <div className="influence-number">
+            {userVotesUsed} <span>/ 3</span>
           </div>
-          <p style={{ fontSize: '0.85rem', color: '#888', fontStyle: 'italic' }}>
+          <p className="influence-hint">
             {userVotesUsed >= 3 ? "Your claim is sealed in blood." : "Points of influence remaining."}
           </p>
         </div>
@@ -160,11 +158,7 @@ function App() {
               className="vote-btn" 
               onClick={() => handleVote(char.id)}
               disabled={userVotesUsed >= 3} 
-              style={{ 
-                borderLeft: `4px solid ${char.color}`,
-                opacity: userVotesUsed >= 3 ? 0.3 : 1, 
-                cursor: userVotesUsed >= 3 ? 'default' : 'pointer'
-              }}
+              style={{ borderLeft: `4px solid ${char.color}` }}
             >
               <span className="btn-icon">{char.icon}</span>
               <span className="btn-name">{char.name}</span>
@@ -173,8 +167,6 @@ function App() {
           ))}
         </div>
       </aside>
-
-      <button className="floating-reset" onClick={handleReset}>🔄</button>
     </div>
   )
 }

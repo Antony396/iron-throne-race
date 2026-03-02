@@ -7,7 +7,7 @@ app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}}) 
 
 # Database configuration
-database_url = os.environ.get('DATABASE_URL', 'sqlite:///throne_votes_v2.db') # Renamed to force a fresh DB
+database_url = os.environ.get('DATABASE_URL', 'sqlite:///throne_votes_v2.db')
 if database_url and database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 
@@ -18,7 +18,7 @@ db = SQLAlchemy(app)
 # --- MODELS ---
 class VoteRecord(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    voter_uuid = db.Column(db.String(100), unique=True, nullable=False) # Switched to UUID
+    voter_uuid = db.Column(db.String(100), unique=True, nullable=False)
     votes_cast = db.Column(db.Integer, default=0)
 
 class CharacterVote(db.Model):
@@ -26,16 +26,15 @@ class CharacterVote(db.Model):
     count = db.Column(db.Integer, default=0)
 
 # --- ROUTES ---
+
 @app.route('/api/citadel-reset-secret-99', methods=['POST'])
 def secret_reset():
-    # 1. Clear all character scores
+    # 1. Clear character scores
     characters = CharacterVote.query.all()
     for char in characters:
         char.count = 0
-    
-    # 2. Clear all voting history (so people can vote again)
+    # 2. Wipe voting history
     VoteRecord.query.delete()
-    
     db.session.commit()
     return jsonify({"message": "The slate has been wiped clean, My Lord."})
 
@@ -46,11 +45,9 @@ def get_votes():
 
 @app.route('/api/voter-status', methods=['GET'])
 def get_voter_status():
-    # Gets voterId from the React frontend URL (?voterId=...)
     voter_uuid = request.args.get('voterId') 
     if not voter_uuid:
         return jsonify({"votes_used": 0})
-    
     voter = VoteRecord.query.filter_by(voter_uuid=voter_uuid).first()
     return jsonify({"votes_used": voter.votes_cast if voter else 0})
 
@@ -58,21 +55,19 @@ def get_voter_status():
 def cast_vote():
     data = request.json
     char_id = data.get('characterId')
-    voter_uuid = data.get('voterId') # Use the UUID sent from React
+    voter_uuid = data.get('voterId')
 
     if not voter_uuid:
         return jsonify({"error": "No voter ID provided"}), 400
 
-    # Find or create the voter record based on UUID
     voter = VoteRecord.query.filter_by(voter_uuid=voter_uuid).first()
-    
     if not voter:
         voter = VoteRecord(voter_uuid=voter_uuid, votes_cast=0)
         db.session.add(voter)
-        db.session.flush() # Stage changes to check limits
+        db.session.flush()
 
     if voter.votes_cast >= 3:
-        return jsonify({"error": "You have exhausted your influence!", "remaining": 0}), 403
+        return jsonify({"error": "Influence exhausted!", "remaining": 0}), 403
 
     character = CharacterVote.query.get(char_id)
     if character:
@@ -84,7 +79,6 @@ def cast_vote():
             "new_count": character.count,
             "votes_used": voter.votes_cast
         })
-    
     return jsonify({"error": "Character not found"}), 404
 
 # --- DATABASE INITIALIZATION ---
