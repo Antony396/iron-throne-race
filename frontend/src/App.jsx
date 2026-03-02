@@ -57,7 +57,7 @@ function App() {
   }, []);
 
   const handleVote = async (id) => {
-    if (userVotesUsed >= 3) return; 
+    if (userVotesUsed >= 300) return; 
     const voterId = getVoterId();
     try {
       const response = await fetch(`${API_BASE_URL}/vote`, {
@@ -82,14 +82,14 @@ function App() {
         <div className="mobile-wrapper">
           <header className="mobile-header">
             <h1 className="cinzel-text">THE IRON <span>THRONE</span></h1>
-            <div className="influence-pill">Influence: {userVotesUsed}/3</div>
+            <div className="influence-pill">Influence: {userVotesUsed}/300</div>
           </header>
           <main className="mobile-track-list">
             {characters.map((char) => {
               const progress = Math.min(((votes[char.id] || 0) / GOAL) * 100, 100);
               return (
                 <div key={char.id} className="mobile-character-row">
-                  <button className="m-vote-btn" onClick={() => handleVote(char.id)} disabled={userVotesUsed >= 3} style={{ borderLeft: `3px solid ${char.color}` }}>
+                  <button className="m-vote-btn" onClick={() => handleVote(char.id)} disabled={userVotesUsed >= 300} style={{ borderLeft: `3px solid ${char.color}` }}>
                     <span className="m-emoji">{char.icon}</span>
                   </button>
                   <div className="m-slider-container">
@@ -111,8 +111,8 @@ function App() {
             <h1 className="title">Race for the <br/><span>Iron Throne</span></h1>
             <div className="influence-panel">
               <h3 className="influence-title">Your Influence</h3>
-              <div className="influence-number">{userVotesUsed} <span>/ 3</span></div>
-              <p className="influence-hint">{userVotesUsed >= 3 ? "Your claim is sealed in blood." : "Points remaining."}</p>
+              <div className="influence-number">{userVotesUsed} <span>/ 300</span></div>
+              <p className="influence-hint">{userVotesUsed >= 300 ? "Your claim is sealed in blood." : "Points remaining."}</p>
             </div>
           </aside>
 
