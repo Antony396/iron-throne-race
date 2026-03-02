@@ -21,6 +21,7 @@ db = SQLAlchemy(app)
 class VoteRecord(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     ip_address = db.Column(db.String(100), unique=True, nullable=False)
+    votes_cast = db.Column(db.Integer, default=0) # New field to track count
 
 class CharacterVote(db.Model):
     id = db.Column(db.String(50), primary_key=True)
@@ -35,26 +36,40 @@ def get_votes():
     # Converts database rows into a simple object: { "jon": 5, "dany": 10... }
     return jsonify({v.id: v.count for v in votes})
 
+@app.route('/api/voter-status', methods=['GET'])
+def get_voter_status():
+    user_ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0]
+    voter = VoteRecord.query.filter_by(ip_address=user_ip).first()
+    return jsonify({"votes_used": voter.votes_cast if voter else 0})
 @app.route('/api/vote', methods=['POST'])
 def cast_vote():
     data = request.json
     char_id = data.get('characterId')
-    
-    # Get the real IP address of the user
     user_ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0]
 
-    if VoteRecord.query.filter_by(ip_address=user_ip).first():
-        return jsonify({"error": "You have already cast your claim!"}), 403
+    # Find or create the voter record
+    voter = VoteRecord.query.filter_by(ip_address=user_ip).first()
+    
+    if not voter:
+        voter = VoteRecord(ip_address=user_ip, votes_cast=0)
+        db.session.add(voter)
+
+    # Check if they have reached the 3-vote limit
+    if voter.votes_cast >= 3:
+        return jsonify({"error": "Limit reached", "remaining": 0}), 403
 
     character = CharacterVote.query.get(char_id)
     if character:
         character.count += 1
-        db.session.add(VoteRecord(ip_address=user_ip))
+        voter.votes_cast += 1 # Increment their personal usage
         db.session.commit()
-        return jsonify({"success": True, "new_count": character.count})
+        return jsonify({
+            "success": True, 
+            "new_count": character.count,
+            "votes_used": voter.votes_cast
+        })
     
     return jsonify({"error": "Character not found"}), 404
-
 # --- DATABASE INITIALIZATION ---
 # This runs once when the app starts up
 with app.app_context():
@@ -69,3 +84,4 @@ with app.app_context():
 if __name__ == '__main__':
     # Local development port
     app.run(debug=True, port=5000)
+
