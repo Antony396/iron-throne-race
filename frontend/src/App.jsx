@@ -3,7 +3,7 @@ import './App.css'
 import throneImg from './assets/throne.png' 
 
 const API_BASE_URL = "https://iron-throne-race.onrender.com/api";
-const MAX_VOTES = 300; // Updated limit
+const MAX_VOTES = 300; 
 const GOAL = 100;
 
 const getVoterId = () => {
@@ -22,7 +22,8 @@ function App() {
   });
 
   const [userVotesUsed, setUserVotesUsed] = useState(0);
-  const [notification, setNotification] = useState(null); // For the popup
+  const [stagedCharacter, setStagedCharacter] = useState(null); // The character in the popup
+  const [isProcessing, setIsProcessing] = useState(false); // Loading state for the vote
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   const characters = [
@@ -58,40 +59,64 @@ function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleVote = async (id) => {
-    if (userVotesUsed >= MAX_VOTES) return; 
+  // Opens the popup to "stage" a vote
+  const handleStageVote = (id) => {
+    if (userVotesUsed >= MAX_VOTES) return;
     const char = characters.find(c => c.id === id);
+    setStagedCharacter(char);
+  };
+
+  // Actually sends the vote to the backend
+  const confirmVote = async () => {
+    if (!stagedCharacter || isProcessing) return;
+    
+    setIsProcessing(true);
+    const charId = stagedCharacter.id;
     const voterId = getVoterId();
 
     try {
       const response = await fetch(`${API_BASE_URL}/vote`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ characterId: id, voterId: voterId })
+        body: JSON.stringify({ characterId: charId, voterId: voterId })
       });
+
       if (response.ok) {
         const data = await response.json();
-        setVotes(prev => ({ ...prev, [id]: data.new_count }));
+        setVotes(prev => ({ ...prev, [charId]: data.new_count }));
         setUserVotesUsed(data.votes_used);
-
-        // Trigger the GoT Popup
-        setNotification(char);
-        setTimeout(() => setNotification(null), 3000);
+        
+        // Success! Close the popup after a brief moment
+        setTimeout(() => {
+          setStagedCharacter(null);
+          setIsProcessing(false);
+        }, 600);
       }
-    } catch (error) { console.error("Raven fell:", error); }
+    } catch (error) { 
+      console.error("Raven fell:", error);
+      setIsProcessing(false);
+    }
   };
 
   return (
     <div className="war-room">
       <div className="texture-overlay"></div>
 
-      {/* --- CHARACTER POPUP --- */}
-      {notification && (
-        <div className="throne-toast" style={{ borderLeft: `4px solid ${notification.color}` }}>
-          <div className="toast-sigil" style={{ backgroundColor: notification.color }}>{notification.icon}</div>
+      {/* --- VOTE CONFIRMATION POPUP --- */}
+      {stagedCharacter && (
+        <div className="throne-toast confirm-mode" style={{ borderLeft: `5px solid ${stagedCharacter.color}` }}>
+          <div className="toast-sigil" style={{ backgroundColor: stagedCharacter.color }}>
+            {stagedCharacter.icon}
+          </div>
           <div className="toast-content">
-            <span className="toast-house">{notification.name}</span>
-            <p className="toast-quote">"{notification.desc}"</p>
+            <span className="toast-house">{stagedCharacter.name}</span>
+            <p className="toast-quote">"{stagedCharacter.desc}"</p>
+            <div className="toast-actions">
+              <button className="cancel-btn" onClick={() => setStagedCharacter(null)}>Discard</button>
+              <button className="confirm-btn" onClick={confirmVote} disabled={isProcessing}>
+                {isProcessing ? "Sealing..." : "Pledge Fealty"}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -109,7 +134,7 @@ function App() {
               const progress = Math.min(((votes[char.id] || 0) / GOAL) * 100, 100);
               return (
                 <div key={char.id} className="mobile-character-row">
-                  <button className="m-vote-btn" onClick={() => handleVote(char.id)} disabled={userVotesUsed >= MAX_VOTES} style={{ borderLeft: `3px solid ${char.color}` }}>
+                  <button className="m-vote-btn" onClick={() => handleStageVote(char.id)} disabled={userVotesUsed >= MAX_VOTES} style={{ borderLeft: `3px solid ${char.color}` }}>
                     <span className="m-emoji">{char.icon}</span>
                   </button>
                   <div className="m-slider-container">
@@ -177,7 +202,7 @@ function App() {
             <h3 className="sidebar-heading">Cast Your Vote</h3>
             <div className="controls-stack">
               {characters.map((char) => (
-                <button key={char.id} className="vote-btn" onClick={() => handleVote(char.id)} disabled={userVotesUsed >= MAX_VOTES} style={{ borderLeft: `4px solid ${char.color}` }}>
+                <button key={char.id} className="vote-btn" onClick={() => handleStageVote(char.id)} disabled={userVotesUsed >= MAX_VOTES} style={{ borderLeft: `4px solid ${char.color}` }}>
                   <span className="btn-icon">{char.icon}</span>
                   <span className="btn-name">{char.name}</span>
                   <span className="btn-count" style={{ color: char.color }}>{votes[char.id] || 0}</span>
