@@ -247,73 +247,81 @@ body, html {
   pointer-events: none;
   z-index: 1;
 }
-/* --- MOBILE OVERRIDES (iPhone & Small Devices) --- */
+/* ... Keep all your existing PC CSS above ... */
+
+/* --- MOBILE RACE MODE OVERRIDES --- */
 @media (max-width: 768px) {
-  body, html {
-    /* Allow scrolling on mobile so we can see stacked content */
-    overflow-y: auto; 
-    height: auto;
-  }
+  body, html { overflow: hidden; height: 100%; }
 
   .war-room {
-    flex-direction: column; /* Stack sidebars and arena vertically */
-    height: auto;
-    min-height: 100vh;
+    flex-direction: column;
+    height: 100vh;
+    padding: 10px;
+    box-sizing: border-box;
   }
 
-  /* 1. Adjust Sidebars */
+  /* Float Sidebars to Top Left/Right */
   .sidebar {
+    position: absolute;
+    z-index: 1000;
+    background: transparent;
+    padding: 10px;
+    width: auto; height: auto;
+    border: none;
+  }
+
+  .left-side { top: 0; left: 0; }
+  .right-side { top: 5px; right: 5px; }
+
+  .title { font-size: 0.9rem; }
+  .title span { font-size: 0.7rem; }
+  .influence-number { font-size: 1.2rem; margin: 0; }
+
+  /* Tiny Vote Grid */
+  .controls-stack {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+    max-height: none;
+  }
+
+  .vote-btn {
+    flex-direction: column;
+    padding: 4px;
+    width: 38px;
+    height: 45px;
+    font-size: 0.7rem;
+    border-left: none !important;
+    border: 1px solid #333;
+  }
+  .btn-icon { margin: 0; font-size: 0.9rem; }
+  .btn-count { font-size: 0.6rem; }
+
+  /* The Track */
+  .arena-container {
+    margin-top: 100px;
+    width: 100%;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .arena-anchor {
     width: 100%;
     height: auto;
-    padding: 30px 20px;
-    border-right: none;
-    border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
   }
 
-  .right-side {
-    border-left: none;
-    padding-bottom: 60px; /* Extra space at the bottom */
+  .mobile-race-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: fit-content;
+    transition: left 1s cubic-bezier(0.2, 0, 0.2, 1);
+    white-space: nowrap;
   }
 
-  /* 2. Scale the Arena */
-  .arena-container {
-    width: 100%;
-    height: 450px; /* Give it a fixed height on mobile */
-    order: -1;    /* Optional: Moves the Arena to the TOP of the screen */
-    overflow: hidden;
-  }
-
-  .arena-svg {
-    width: 90vw;   /* Scale SVG to fit screen width */
-    height: 90vw;
-  }
-
-  /* 3. Scale the Throne Image */
-  .throne-center {
-    width: 140px;
-    height: 140px;
-  }
-
-  .throne-glow {
-    width: 250px;
-    height: 250px;
-  }
-
-  /* 4. Adjust Typography for smaller screens */
-  .title {
-    font-size: 1.8rem;
-  }
-
-  .influence-number {
-    font-size: 2rem;
-  }
-
-  /* 5. Make buttons easier to tap on mobile */
-  .vote-btn {
-    padding: 18px; 
-  }
-  
-  .vote-btn:hover:not(:disabled) {
-    transform: none; /* Disable horizontal slide on mobile touch */
-  }
+  .char-emoji { font-size: 28px; margin-right: 8px; }
+  .char-label { font-size: 8px; letter-spacing: 0; }
 }

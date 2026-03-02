@@ -4,7 +4,6 @@ import throneImg from './assets/throne.png'
 
 const API_BASE_URL = "https://iron-throne-race.onrender.com/api";
 
-// HELPER: Creates a unique ID for this specific browser/device
 const getVoterId = () => {
   let id = localStorage.getItem('throne_voter_id');
   if (!id) {
@@ -21,6 +20,7 @@ function App() {
   });
 
   const [userVotesUsed, setUserVotesUsed] = useState(0);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const GOAL = 100;
 
   const characters = [
@@ -37,48 +37,40 @@ function App() {
   ];
 
   useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    
     const init = async () => {
       const voterId = getVoterId();
       try {
         const resVotes = await fetch(`${API_BASE_URL}/votes`);
         if (resVotes.ok) setVotes(await resVotes.json());
-
         const resStatus = await fetch(`${API_BASE_URL}/voter-status?voterId=${voterId}`);
         if (resStatus.ok) {
           const status = await resStatus.json();
           setUserVotesUsed(status.votes_used);
         }
-      } catch (e) { console.error("Error fetching:", e); }
+      } catch (e) { console.error("Error:", e); }
     };
     init();
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const handleVote = async (id) => {
     if (userVotesUsed >= 3) return; 
-
     const voterId = getVoterId();
-
     try {
       const response = await fetch(`${API_BASE_URL}/vote`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          characterId: id,
-          voterId: voterId 
-        })
+        body: JSON.stringify({ characterId: id, voterId: voterId })
       });
-
       if (response.ok) {
         const data = await response.json();
         setVotes(prev => ({ ...prev, [id]: data.new_count }));
         setUserVotesUsed(data.votes_used);
-      } else {
-        const err = await response.json();
-        alert(err.error);
       }
-    } catch (error) {
-      console.error("The raven fell:", error);
-    }
+    } catch (error) { console.error("Raven fell:", error); }
   };
 
   return (
@@ -89,12 +81,9 @@ function App() {
         <h1 className="title">Race for the <br/><span>Iron Throne</span></h1>
         <p className="description">Solid lines represent the path of destiny.</p>
         
-        {/* UPDATED: Using the new CSS classes for the influence panel */}
         <div className="influence-panel">
           <h3 className="influence-title">Your Influence</h3>
-          <div className="influence-number">
-            {userVotesUsed} <span>/ 3</span>
-          </div>
+          <div className="influence-number">{userVotesUsed} <span>/ 3</span></div>
           <p className="influence-hint">
             {userVotesUsed >= 3 ? "Your claim is sealed in blood." : "Points of influence remaining."}
           </p>
@@ -103,48 +92,57 @@ function App() {
 
       <main className="arena-container">
         <div className="arena-anchor">
-          <svg className="arena-svg" viewBox="-350 -350 700 700">
-            {characters.map((char, index) => {
-              const angle = (index / characters.length) * 2 * Math.PI;
-              const maxR = 280; 
-              const xEdge = Math.cos(angle) * maxR;
-              const yEdge = Math.sin(angle) * maxR;
-              const travelR = maxR * (1 - (votes[char.id] || 0) / GOAL);
-              const xPos = Math.cos(angle) * travelR;
-              const yPos = Math.sin(angle) * travelR;
-
-              return (
-                <g key={`path-${char.id}`}>
-                  <line x1={xPos} y1={yPos} x2="0" y2="0" className="path-faded" style={{ stroke: char.color, opacity: 0.15 }} />
-                  <line x1={xEdge} y1={yEdge} x2={xPos} y2={yPos} className="path-traveled" style={{ stroke: char.color }} />
-                </g>
-              );
-            })}
-          </svg>
-
-          <div className="throne-center">
-            <div className="throne-glow"></div>
-            <img src={throneImg} alt="Iron Throne" className="throne-image" />
-          </div>
-
-          {characters.map((char, index) => {
-            const angle = (index / characters.length) * 2 * Math.PI;
-            const currentR = 280 * (1 - (votes[char.id] || 0) / GOAL);
-            const x = Math.cos(angle) * currentR;
-            const y = Math.sin(angle) * currentR;
-
-            return (
-              <div 
-                key={char.id} 
-                className="circle-token"
-                style={{ transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))` }}
-              >
-                <span className="char-emoji">{char.icon}</span>
-                <div className="char-label" style={{ borderColor: char.color, boxShadow: `0 0 10px ${char.color}` }}>
-                  {char.name}
-                </div>
+          {/* Circular Arena & Throne (Hidden on Mobile) */}
+          {!isMobile && (
+            <>
+              <svg className="arena-svg" viewBox="-350 -350 700 700">
+                {characters.map((char, index) => {
+                  const angle = (index / characters.length) * 2 * Math.PI;
+                  const maxR = 280; 
+                  const travelR = maxR * (1 - (votes[char.id] || 0) / GOAL);
+                  const xPos = Math.cos(angle) * travelR;
+                  const yPos = Math.sin(angle) * travelR;
+                  const xEdge = Math.cos(angle) * maxR;
+                  const yEdge = Math.sin(angle) * maxR;
+                  return (
+                    <g key={`path-${char.id}`}>
+                      <line x1={xPos} y1={yPos} x2="0" y2="0" style={{ stroke: char.color, opacity: 0.1 }} />
+                      <line x1={xEdge} y1={yEdge} x2={xPos} y2={yPos} className="path-traveled" style={{ stroke: char.color }} />
+                    </g>
+                  );
+                })}
+              </svg>
+              <div className="throne-center">
+                <div className="throne-glow"></div>
+                <img src={throneImg} alt="Throne" className="throne-image" />
               </div>
-            );
+            </>
+          )}
+
+          {/* CHARACTER TOKENS */}
+          {characters.map((char, index) => {
+            if (isMobile) {
+              // Sliding Race Logic for Mobile
+              const progress = Math.min(((votes[char.id] || 0) / GOAL) * 85, 85);
+              return (
+                <div key={char.id} className="mobile-race-row" style={{ left: `${progress}%` }}>
+                  <span className="char-emoji">{char.icon}</span>
+                  <div className="char-label" style={{ borderColor: char.color }}>{char.name}</div>
+                </div>
+              );
+            } else {
+              // Circular Token Logic for PC
+              const angle = (index / characters.length) * 2 * Math.PI;
+              const currentR = 280 * (1 - (votes[char.id] || 0) / GOAL);
+              const x = Math.cos(angle) * currentR;
+              const y = Math.sin(angle) * currentR;
+              return (
+                <div key={char.id} className="circle-token" style={{ transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))` }}>
+                  <span className="char-emoji">{char.icon}</span>
+                  <div className="char-label" style={{ borderColor: char.color }}>{char.name}</div>
+                </div>
+              );
+            }
           })}
         </div>
       </main>
@@ -153,13 +151,7 @@ function App() {
         <h3 className="sidebar-heading">Cast Your Vote</h3>
         <div className="controls-stack">
           {characters.map((char) => (
-            <button 
-              key={char.id} 
-              className="vote-btn" 
-              onClick={() => handleVote(char.id)}
-              disabled={userVotesUsed >= 3} 
-              style={{ borderLeft: `4px solid ${char.color}` }}
-            >
+            <button key={char.id} className="vote-btn" onClick={() => handleVote(char.id)} disabled={userVotesUsed >= 3} style={{ borderLeft: `4px solid ${char.color}` }}>
               <span className="btn-icon">{char.icon}</span>
               <span className="btn-name">{char.name}</span>
               <span className="btn-count" style={{ color: char.color }}>{votes[char.id] || 0}</span>
@@ -168,7 +160,7 @@ function App() {
         </div>
       </aside>
     </div>
-  )
+  );
 }
 
 export default App;
