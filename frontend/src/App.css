@@ -247,3 +247,73 @@ body, html {
   pointer-events: none;
   z-index: 1;
 }
+/* --- MOBILE OVERRIDES (iPhone & Small Devices) --- */
+@media (max-width: 768px) {
+  body, html {
+    /* Allow scrolling on mobile so we can see stacked content */
+    overflow-y: auto; 
+    height: auto;
+  }
+
+  .war-room {
+    flex-direction: column; /* Stack sidebars and arena vertically */
+    height: auto;
+    min-height: 100vh;
+  }
+
+  /* 1. Adjust Sidebars */
+  .sidebar {
+    width: 100%;
+    height: auto;
+    padding: 30px 20px;
+    border-right: none;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  }
+
+  .right-side {
+    border-left: none;
+    padding-bottom: 60px; /* Extra space at the bottom */
+  }
+
+  /* 2. Scale the Arena */
+  .arena-container {
+    width: 100%;
+    height: 450px; /* Give it a fixed height on mobile */
+    order: -1;    /* Optional: Moves the Arena to the TOP of the screen */
+    overflow: hidden;
+  }
+
+  .arena-svg {
+    width: 90vw;   /* Scale SVG to fit screen width */
+    height: 90vw;
+  }
+
+  /* 3. Scale the Throne Image */
+  .throne-center {
+    width: 140px;
+    height: 140px;
+  }
+
+  .throne-glow {
+    width: 250px;
+    height: 250px;
+  }
+
+  /* 4. Adjust Typography for smaller screens */
+  .title {
+    font-size: 1.8rem;
+  }
+
+  .influence-number {
+    font-size: 2rem;
+  }
+
+  /* 5. Make buttons easier to tap on mobile */
+  .vote-btn {
+    padding: 18px; 
+  }
+  
+  .vote-btn:hover:not(:disabled) {
+    transform: none; /* Disable horizontal slide on mobile touch */
+  }
+}
