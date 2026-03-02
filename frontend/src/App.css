@@ -151,3 +151,76 @@ body, html {
 
   .m-fill { height: 100%; transition: width 1s cubic-bezier(0.1, 0, 0.1, 1); }
 }
+/* --- THEMATIC POPUP (TOAST) --- */
+.throne-toast {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 280px;
+  background: #121212;
+  background-image: url('https://www.transparenttextures.com/patterns/dark-leather.png');
+  color: #eee;
+  display: flex;
+  align-items: center;
+  z-index: 10000;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+  animation: ravenFly 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes ravenFly {
+  from { transform: translateY(50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.toast-sigil {
+  width: 50px;
+  height: 70px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.8rem;
+}
+
+.toast-content {
+  padding: 12px;
+  flex: 1;
+}
+
+.toast-house {
+  display: block;
+  font-family: 'Cinzel', serif;
+  color: #d4af37;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.toast-quote {
+  margin: 4px 0 0 0;
+  font-style: italic;
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+/* --- MOBILE HEADER ADJUSTMENTS --- */
+.mobile-instruction {
+  font-size: 1rem !important;
+  line-height: 1.3;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.mobile-instruction span {
+  color: #d4af37;
+  display: block;
+  font-size: 1.3rem;
+}
+
+@media (max-width: 768px) {
+  .throne-toast {
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+    width: auto;
+  }
+}

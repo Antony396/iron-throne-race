@@ -3,6 +3,8 @@ import './App.css'
 import throneImg from './assets/throne.png' 
 
 const API_BASE_URL = "https://iron-throne-race.onrender.com/api";
+const MAX_VOTES = 300; // Updated limit
+const GOAL = 100;
 
 const getVoterId = () => {
   let id = localStorage.getItem('throne_voter_id');
@@ -20,20 +22,20 @@ function App() {
   });
 
   const [userVotesUsed, setUserVotesUsed] = useState(0);
+  const [notification, setNotification] = useState(null); // For the popup
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const GOAL = 100;
 
   const characters = [
-    { id: 'jon', name: 'Jon', icon: '❄️', color: '#87cfebb6' },
-    { id: 'dany', name: 'Dany', icon: '🔥', color: '#c94204ad' },
-    { id: 'tyrion', name: 'Tyrion', icon: '🍷', color: '#68052b' },
-    { id: 'tywin', name: 'Tywin', icon: '🦁', color: '#9e8809b7' },
-    { id: 'arya', name: 'Arya', icon: '🗡️', color: '#708090c5' },
-    { id: 'sansa', name: 'Sansa', icon: '👑', color: '#504466bb' },
-    { id: 'bran', name: 'Bran', icon: '👁️', color: '#0d530db0' },
-    { id: 'stannis', name: 'Stannis', icon: '🦌', color: '#ff8c00b6' },
-    { id: 'robert', name: 'Robert', icon: '🍺', color: '#f0ae08b4' },
-    { id: 'ramsay', name: 'Ramsay', icon: '🌭', color: '#8b0000ab' },
+    { id: 'jon', name: 'Jon', icon: '❄️', color: '#87cfebb6', desc: 'The White Wolf and King in the North.' },
+    { id: 'dany', name: 'Dany', icon: '🔥', color: '#c94204ad', desc: 'Mother of Dragons, Breaker of Chains.' },
+    { id: 'tyrion', name: 'Tyrion', icon: '🍷', color: '#68052b', desc: 'A mind is like a sword; it needs a whetstone.' },
+    { id: 'tywin', name: 'Tywin', icon: '🦁', color: '#9e8809b7', desc: 'A Lion does not concern himself with sheep.' },
+    { id: 'arya', name: 'Arya', icon: '🗡️', color: '#708090c5', desc: 'A girl has no name, but she has a list.' },
+    { id: 'sansa', name: 'Sansa', icon: '👑', color: '#504466bb', desc: 'The North remembers, and so does the Lady.' },
+    { id: 'bran', name: 'Bran', icon: '👁️', color: '#0d530db0', desc: 'The Three-Eyed Raven sees all paths.' },
+    { id: 'stannis', name: 'Stannis', icon: '🦌', color: '#ff8c00b6', desc: 'The Iron Will. The rightful heir by law.' },
+    { id: 'robert', name: 'Robert', icon: '🍺', color: '#f0ae08b4', desc: 'Gods, he was strong then.' },
+    { id: 'ramsay', name: 'Ramsay', icon: '🌭', color: '#8b0000ab', desc: 'If you think this has a happy ending...' },
   ];
 
   useEffect(() => {
@@ -57,8 +59,10 @@ function App() {
   }, []);
 
   const handleVote = async (id) => {
-    if (userVotesUsed >= 300) return; 
+    if (userVotesUsed >= MAX_VOTES) return; 
+    const char = characters.find(c => c.id === id);
     const voterId = getVoterId();
+
     try {
       const response = await fetch(`${API_BASE_URL}/vote`, {
         method: 'POST',
@@ -69,6 +73,10 @@ function App() {
         const data = await response.json();
         setVotes(prev => ({ ...prev, [id]: data.new_count }));
         setUserVotesUsed(data.votes_used);
+
+        // Trigger the GoT Popup
+        setNotification(char);
+        setTimeout(() => setNotification(null), 3000);
       }
     } catch (error) { console.error("Raven fell:", error); }
   };
@@ -77,19 +85,31 @@ function App() {
     <div className="war-room">
       <div className="texture-overlay"></div>
 
+      {/* --- CHARACTER POPUP --- */}
+      {notification && (
+        <div className="throne-toast" style={{ borderLeft: `4px solid ${notification.color}` }}>
+          <div className="toast-sigil" style={{ backgroundColor: notification.color }}>{notification.icon}</div>
+          <div className="toast-content">
+            <span className="toast-house">{notification.name}</span>
+            <p className="toast-quote">"{notification.desc}"</p>
+          </div>
+        </div>
+      )}
+
       {isMobile ? (
-        /* --- MOBILE UI --- */
         <div className="mobile-wrapper">
           <header className="mobile-header">
-            <h1 className="cinzel-text">THE IRON <span>THRONE</span></h1>
-            <div className="influence-pill">Influence: {userVotesUsed}/300</div>
+            <h1 className="cinzel-text mobile-instruction">
+              Vote for who deserves the <span>Iron Throne</span>
+            </h1>
+            <div className="influence-pill">Influence: {userVotesUsed}/{MAX_VOTES}</div>
           </header>
           <main className="mobile-track-list">
             {characters.map((char) => {
               const progress = Math.min(((votes[char.id] || 0) / GOAL) * 100, 100);
               return (
                 <div key={char.id} className="mobile-character-row">
-                  <button className="m-vote-btn" onClick={() => handleVote(char.id)} disabled={userVotesUsed >= 300} style={{ borderLeft: `3px solid ${char.color}` }}>
+                  <button className="m-vote-btn" onClick={() => handleVote(char.id)} disabled={userVotesUsed >= MAX_VOTES} style={{ borderLeft: `3px solid ${char.color}` }}>
                     <span className="m-emoji">{char.icon}</span>
                   </button>
                   <div className="m-slider-container">
@@ -105,14 +125,13 @@ function App() {
           </main>
         </div>
       ) : (
-        /* --- DESKTOP UI --- */
         <div className="desktop-wrapper">
           <aside className="sidebar left-side">
             <h1 className="title">Race for the <br/><span>Iron Throne</span></h1>
             <div className="influence-panel">
               <h3 className="influence-title">Your Influence</h3>
-              <div className="influence-number">{userVotesUsed} <span>/ 300</span></div>
-              <p className="influence-hint">{userVotesUsed >= 300 ? "Your claim is sealed in blood." : "Points remaining."}</p>
+              <div className="influence-number">{userVotesUsed} <span>/ {MAX_VOTES}</span></div>
+              <p className="influence-hint">{userVotesUsed >= MAX_VOTES ? "Your claim is sealed in blood." : "Points remaining."}</p>
             </div>
           </aside>
 
@@ -158,7 +177,7 @@ function App() {
             <h3 className="sidebar-heading">Cast Your Vote</h3>
             <div className="controls-stack">
               {characters.map((char) => (
-                <button key={char.id} className="vote-btn" onClick={() => handleVote(char.id)} disabled={userVotesUsed >= 3} style={{ borderLeft: `4px solid ${char.color}` }}>
+                <button key={char.id} className="vote-btn" onClick={() => handleVote(char.id)} disabled={userVotesUsed >= MAX_VOTES} style={{ borderLeft: `4px solid ${char.color}` }}>
                   <span className="btn-icon">{char.icon}</span>
                   <span className="btn-name">{char.name}</span>
                   <span className="btn-count" style={{ color: char.color }}>{votes[char.id] || 0}</span>
