@@ -26,6 +26,18 @@ class CharacterVote(db.Model):
     count = db.Column(db.Integer, default=0)
 
 # --- ROUTES ---
+@app.route('/api/citadel-reset-secret-99', methods=['POST'])
+def secret_reset():
+    # 1. Clear all character scores
+    characters = CharacterVote.query.all()
+    for char in characters:
+        char.count = 0
+    
+    # 2. Clear all voting history (so people can vote again)
+    VoteRecord.query.delete()
+    
+    db.session.commit()
+    return jsonify({"message": "The slate has been wiped clean, My Lord."})
 
 @app.route('/api/votes', methods=['GET'])
 def get_votes():

@@ -247,12 +247,7 @@ body, html {
   align-items: center;
 }
 
-.floating-reset:hover {
-  border-color: var(--gold);
-  color: var(--gold);
-  transform: rotate(-180deg) scale(1.1);
-  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
-}
+
 
 /* --- TEXTURE --- */
 .texture-overlay {

@@ -82,13 +82,7 @@ function App() {
     }
   };
 
-  const handleReset = () => {
-    if (window.confirm("My Lord, shall we restart the war?")) {
-      const resetVotes = {};
-      characters.forEach(c => resetVotes[c.id] = 0);
-      setVotes(resetVotes);
-    }
-  };
+ 
 
   return (
     <div className="war-room">
